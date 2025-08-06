@@ -35,9 +35,31 @@ body {
     padding: 20px;
 }
 
+/* Contenedor para botones favoritos */
+.botones-superiores {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.botones-superiores button {
+    padding: 10px 18px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background-color: #0a4d15;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.botones-superiores button:hover {
+    background-color: #063a10;
+}
+
+/* Tarjetas */
 .cajashijas {
     width: 300px;
-    height: auto;
     padding: 20px;
     background: inherit;
     border: 2px solid rgb(7, 66, 25);
@@ -45,6 +67,8 @@ body {
     border-radius: 10px;
     transition: transform 0.3s ease;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .cajashijas:hover {
@@ -70,23 +94,32 @@ body {
     text-align: justify;
 }
 
-.descargar-btn {
-    display: block;
-    margin: 15px auto 0;
-    padding: 8px 16px;
-    font-size: 1rem;
-    background: #0a4d15;
-    color: white;
+/* Botones en línea dentro de cada tarjeta */
+.botones {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: auto;
+    flex-wrap: nowrap;
+}
+
+.botones button {
+    padding: 8px 14px;
+    font-size: 0.9rem;
     border: none;
     border-radius: 8px;
     cursor: pointer;
+    background: #0a4d15;
+    color: white;
     transition: background 0.3s ease;
+    flex: 1 1 auto;
 }
 
-.descargar-btn:hover {
+.botones button:hover {
     background: #063a10;
 }
 
+/* Botón mostrar más centrado */
 #mostrar-mas {
     display: block;
     margin: 30px auto;
@@ -98,6 +131,7 @@ body {
     cursor: pointer;
     border-radius: 10px;
     transition: background 0.3s ease;
+    width: max-content; /* Ajusta ancho al contenido */
 }
 
 #mostrar-mas:hover {
@@ -163,4 +197,110 @@ footer a {
     height: 28px;
     fill: white;
     pointer-events: none;
+}
+
+/* Botón hamburguesa */
+#btn-hamburguesa {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 36px;
+    height: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    z-index: 110;
+    background: transparent;
+    border: none;
+}
+
+.hamburguesa {
+    width: 100%;
+    height: 4px;
+    background: white;
+    border-radius: 2px;
+}
+
+/* Sidebar lateral */
+#sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; /* fuera de pantalla al inicio */
+    width: 280px;
+    height: 100vh;
+    background-color: #063a10;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.7);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    transition: left 0.3s ease;
+    z-index: 109;
+    overflow-y: auto;
+}
+
+#sidebar.open {
+    left: 0;
+}
+
+.foto-autor {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ddb938;
+    box-shadow: 0 0 10px #ddb938;
+}
+
+.frase-autor {
+    font-style: italic;
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #f7e98e;
+}
+
+/* Redes sociales verticales */
+.redes-sociales {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.redes-sociales a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: white;
+    font-size: 1.1rem;
+    background: #0a4d15;
+    padding: 8px 12px;
+    border-radius: 8px;
+    width: 100%;
+    justify-content: flex-start;
+    transition: background-color 0.3s ease;
+}
+
+.redes-sociales a:hover {
+    background-color: #0d5d21;
+}
+
+.redes-sociales img {
+    width: 28px;
+    height: 28px;
+    filter: brightness(1) invert(1);
+    transition: filter 0.3s ease;
+}
+
+.redes-sociales a:hover img {
+    filter: brightness(1) invert(0.5) drop-shadow(0 0 4px #ddb938);
+}
+
+.redes-sociales span {
+    user-select: none;
 }
