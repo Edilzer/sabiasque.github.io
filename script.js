@@ -201,52 +201,187 @@ const curiosidades = [
     }
 ];
 
+// Variables globales
 let mostradas = 0;
+let mostrandoFavoritos = false;
+
 const contenedor = document.getElementById("contenedor-curiosidades");
-const boton = document.getElementById("mostrar-mas");
+const botonMostrarMas = document.getElementById("mostrar-mas");
+const botonFavoritos = document.getElementById("favoritosBtn");
+const btnHamburguesa = document.getElementById('btn-hamburguesa');
+const sidebar = document.getElementById('sidebar');
 
-function mostrarCuriosidades(cantidad = 3) {
-    const final = Math.min(mostradas + cantidad, curiosidades.length);
-    for (let i = mostradas; i < final; i++) {
-        const caja = document.createElement("div");
-        caja.className = "cajashijas";
-        caja.innerHTML = `
-            <div class="contenido-curiosidad">
-                <img src="${curiosidades[i].img}" alt="${curiosidades[i].titulo}">
-                <h3>${curiosidades[i].titulo}</h3>
-                <p>${curiosidades[i].texto}</p>
-            </div>
-            <button class="descargar-btn" onclick="descargarCuriosidad(this)">Descargar</button>
-        `;
-        contenedor.appendChild(caja);
-    }
-    mostradas = final;
-    if (mostradas >= curiosidades.length) {
-        boton.style.display = "none";
-    }
+// Función para obtener favoritos de localStorage
+function obtenerFavoritos() {
+    const fav = localStorage.getItem("favoritos");
+    return fav ? JSON.parse(fav) : [];
 }
 
-boton.addEventListener("click", () => mostrarCuriosidades());
-window.onload = () => mostrarCuriosidades(3);
+// Guardar favoritos en localStorage
+function guardarFavoritos(favoritos) {
+    localStorage.setItem("favoritos", JSON.stringify(favoritos));
+}
 
-function descargarCuriosidad(boton) {
-    const caja = boton.parentElement;
+// Crear tarjeta de curiosidad
+function crearTarjeta(curiosidad) {
+    const caja = document.createElement("div");
+    caja.className = "cajashijas";
+    caja.dataset.titulo = curiosidad.titulo;
 
-    // Oculta el botón para que no aparezca en la imagen
-    boton.style.display = "none";
+    // Ver si está en favoritos
+    const favoritos = obtenerFavoritos();
+    const esFavorito = favoritos.includes(curiosidad.titulo);
 
-    html2canvas(caja, { backgroundColor: 'white', scale: 2 }).then(canvas => {
-        boton.style.display = "inline-block";
+    caja.innerHTML = `
+        <img src="${curiosidad.img}" alt="Imagen de ${curiosidad.titulo}" />
+        <h3>${curiosidad.titulo}</h3>
+        <p>${curiosidad.texto}</p>
+        <div class="botones">
+            <button class="descargar-btn" aria-label="Descargar imagen de ${curiosidad.titulo}">Descargar</button>
+            <button class="btn-compartir" aria-label="Compartir curiosidad ${curiosidad.titulo}">Compartir</button>
+            <button class="btn-favorito" aria-label="${esFavorito ? 'Quitar' : 'Agregar'} favorito ${curiosidad.titulo}">
+                ${esFavorito ? "❤️" : "🤍"}
+            </button>
+        </div>
+    `;
 
-        const enlace = document.createElement("a");
-        const titulo = caja.querySelector("h3").innerText.replace(/\s+/g, "_");
-        const fecha = new Date().toISOString().slice(0, 10);
-        enlace.download = `${titulo}_${fecha}.jpg`;
-        enlace.href = canvas.toDataURL("image/jpeg", 1.0);
-        enlace.click();
-    }).catch(err => {
-        console.error(err);
-        boton.style.display = "inline-block";
-        alert("Error al descargar la imagen.");
+    // Descargar
+    caja.querySelector(".descargar-btn").addEventListener("click", () => {
+        descargarImagen(curiosidad.img, curiosidad.titulo);
     });
+
+    // Compartir
+    caja.querySelector(".btn-compartir").addEventListener("click", async () => {
+        compartirCuriosidad(curiosidad.texto);
+    });
+
+    // Favorito
+    caja.querySelector(".btn-favorito").addEventListener("click", () => {
+        toggleFavorito(curiosidad.titulo, caja);
+    });
+
+    return caja;
 }
+
+// Descargar imagen
+function descargarImagen(url, titulo) {
+    fetch(url)
+        .then(res => res.blob())
+        .then(blob => {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = titulo.replace(/\s+/g, "_") + ".jpg";
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
+}
+
+// Compartir curiosidad
+async function compartirCuriosidad(texto) {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: "Curiosidad",
+                text: texto,
+            });
+        } catch (error) {
+            alert("No se pudo compartir: " + error);
+        }
+    } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(texto);
+        alert("Texto copiado al portapapeles");
+    } else {
+        alert("Función de compartir no soportada");
+    }
+}
+
+// Añadir o quitar favorito
+function toggleFavorito(titulo, tarjeta) {
+    let favoritos = obtenerFavoritos();
+    const index = favoritos.indexOf(titulo);
+    const btnFavorito = tarjeta.querySelector(".btn-favorito");
+
+    if (index === -1) {
+        favoritos.push(titulo);
+        btnFavorito.textContent = "❤️";
+        btnFavorito.setAttribute("aria-label", `Quitar favorito ${titulo}`);
+    } else {
+        favoritos.splice(index, 1);
+        btnFavorito.textContent = "🤍";
+        btnFavorito.setAttribute("aria-label", `Agregar favorito ${titulo}`);
+
+        if (mostrandoFavoritos) {
+            tarjeta.remove();
+            if (favoritos.length === 0) {
+                contenedor.innerHTML = "<p style='text-align:center; width: 100%; font-size:1.2rem;'>No tienes curiosidades favoritas.</p>";
+            }
+        }
+    }
+
+    guardarFavoritos(favoritos);
+}
+
+// Mostrar curiosidades normales
+function mostrarCuriosidades(cantidad = 4) {
+    if (mostrandoFavoritos) return; // no mostrar mientras en favoritos
+
+    for (let i = 0; i < cantidad; i++) {
+        if (mostradas >= curiosidades.length) {
+            botonMostrarMas.style.display = "none";
+            break;
+        }
+        const tarjeta = crearTarjeta(curiosidades[mostradas]);
+        contenedor.appendChild(tarjeta);
+        mostradas++;
+    }
+}
+
+// Mostrar solo favoritos
+function mostrarFavoritos() {
+    contenedor.innerHTML = "";
+    const favoritos = obtenerFavoritos();
+    if (favoritos.length === 0) {
+        contenedor.innerHTML = "<p style='text-align:center; width: 100%; font-size:1.2rem;'>No tienes curiosidades favoritas.</p>";
+        botonMostrarMas.style.display = "none";
+        return;
+    }
+
+    favoritos.forEach(tituloFav => {
+        const curiosidad = curiosidades.find(c => c.titulo === tituloFav);
+        if (curiosidad) {
+            const tarjeta = crearTarjeta(curiosidad);
+            contenedor.appendChild(tarjeta);
+        }
+    });
+    botonMostrarMas.style.display = "none";
+}
+
+// Botón mostrar favoritos
+botonFavoritos.addEventListener("click", () => {
+    mostrandoFavoritos = !mostrandoFavoritos;
+    if (mostrandoFavoritos) {
+        botonFavoritos.textContent = "⬅️ Mostrar todas";
+        mostrarFavoritos();
+    } else {
+        botonFavoritos.textContent = "💖 Favoritos";
+        contenedor.innerHTML = "";
+        mostradas = 0;
+        botonMostrarMas.style.display = "block";
+        mostrarCuriosidades();
+    }
+});
+
+// Botón mostrar más
+botonMostrarMas.addEventListener("click", () => {
+    mostrarCuriosidades(4);
+});
+
+// Mostrar al cargar
+mostrarCuriosidades(4);
+
+// Funcionalidad menú hamburguesa
+btnHamburguesa.addEventListener('click', () => {
+    const abierto = sidebar.classList.toggle('open');
+    btnHamburguesa.setAttribute('aria-expanded', abierto);
+    sidebar.setAttribute('aria-hidden', !abierto);
+});
